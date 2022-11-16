@@ -7,9 +7,9 @@
 </head>
 
 <body>
-    <form  method="post" enctype="multipart/form-data">
+    <form action="/sampleform-post" method="POST" enctype="multipart/form-data">
         <p>ファイル貼り付け場所<span>（入力必須）</span></p>
-        <input type="file" name="upload-file" accept=".xlsx, .csv" required><br>
+        <input type="file" name="upload-file" required><br>
         <p>金額の入力されている列名<span>（入力必須）</span><br>
         </p>
         <select name="sample" required>
@@ -31,7 +31,7 @@
             ※半角で数値を入力してください</p>
         <input type="text" name="random_state" required>
         <p>全ての項目を入力して実行ボタンをクリックしてください</p>
-        <input type="button" value="実行">
+        <input type="submit" value="start">
     </form>
 </body>
 
