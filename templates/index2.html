@@ -11,6 +11,21 @@
     <form action="/sampleform-post" method="POST">
         <input name="data1"></input>
         <button type="submit">送信</button>
+        <p>手続実施上の重要性<span>（入力必須）</span><br>
+            ※半角で数値を入力してください</p>
+        <input type="text" name="pm" required>
+        <p>監査リスク<span>（入力必須）</span></p>
+        <input type="radio" name="audit_risk" value="RMM-L" required checked>RMM-L
+        <input type="radio" name="audit_risk" value="RMM-H" required>RMM-H
+        <input type="radio" name="audit_risk" value="SR" required>SR
+        <p>内部統制<span>（入力必須）</span></p>
+        <input type="radio" name="internal_control" value="依頼する" required checked>依拠する
+        <input type="radio" name="internal_control" value="依拠しない" required>依拠しない
+        <p>ランダムシード<span>（入力必須）</span><br>
+            ※半角で数値を入力してください</p>
+        <input type="text" name="random_state" required>
+        <p>全ての項目を入力して実行ボタンをクリックしてください</p>
+        <input type="submit" value="start">
     </form>
 </body>
 </html>

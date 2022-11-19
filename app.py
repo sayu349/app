@@ -1,6 +1,5 @@
 import os
 from flask import Flask
-from flask import Flask, render_template
 
 
 
@@ -14,7 +13,6 @@ from flask import Flask,render_template, request
 def read_excel(filename="sample.xlsx"):
     df = pd.read_excel(filename)
     return df.columns
-
 
 data_list=read_excel()
 @app.route("/")
