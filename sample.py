@@ -64,6 +64,8 @@ def index():
 @app.route("/sampleform-post", methods=["POST"])
 def column_search():
     file = request.files['upload-file']
+    # データを保持したい場合は以下のコードを回す(オンライン上へデプロイする際には要検討)
+    file.save("uploads/upload_file.xlsx")
     file_title = file.filename
     data_list = read_excel(request.files['upload-file'])
     return render_template("column_search_result.html",
@@ -75,7 +77,7 @@ def column_search():
 def calc_result():
     print(request.form)
     # シート内で列名を指定して、金額合計を算出
-    df = pd.read_excel('sample.xlsx')
+    df = pd.read_excel("uploads/upload_file.xlsx")
     total_amount = df[request.form['sample']].sum()
     # 変動パラメータの設定
     # 母集団の金額合計
@@ -94,5 +96,4 @@ def calc_result():
     # サンプルサイズnの算定
     n = sample_poisson(N, pm, ke, alpha, audit_risk, internal_control)
     print(n)
-    return render_template("result.html",
-    n=n)
+    return render_template("result.html",n=n)
