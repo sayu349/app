@@ -22,16 +22,10 @@ import seaborn as sns
 # おまじない
 app = Flask(__name__)
 
-# カラム行特定（行の空欄が0の行を探してくる）
+# 金額列調整方法
 def read_excel(filename):
     df = pd.read_excel(filename)
-    row_count = 0
-    while len(df.T.query("index.str.contains('Unnamed')",engine="python"))!=0:
-        amount_search_file = pd.read_excel(filename,skiprows = row_count)
-        df = amount_search_file
-        row_count = row_count + 1
     return df.columns
-
 
 # ポアソン分布による金額単位サンプリングによるサンプル数算定の関数
 def sample_poisson(N, pm, ke, alpha, audit_risk, internal_control='依拠しない'):
