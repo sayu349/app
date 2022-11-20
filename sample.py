@@ -1,10 +1,7 @@
-import os
+# Flaskライブラリ
 from flask import Flask
 from flask import render_template
 from flask import request
-import math
-import pandas as pd
-import numpy as np
 
 
 # 統計等のライブラリ
@@ -26,8 +23,6 @@ import seaborn as sns
 app = Flask(__name__)
 
 # 金額列調整方法
-
-
 def read_excel(filename):
     df = pd.read_excel(filename)
     return df.columns
@@ -76,8 +71,12 @@ def column_search():
 @app.route("/result", methods=["POST"])
 def calc_result():
     print(request.form)
+    # 金額列定義
+    amount = request.form['sample']
+
     # シート内で列名を指定して、金額合計を算出
     df = pd.read_excel("uploads/upload_file.xlsx")
+    sample_data = pd.read_excel("uploads/upload_file.xlsx")
     total_amount = df[request.form['sample']].sum()
     # 変動パラメータの設定
     # 母集団の金額合計
@@ -95,5 +94,39 @@ def calc_result():
     alpha = 0.05
     # サンプルサイズnの算定
     n = sample_poisson(N, pm, ke, alpha, audit_risk, internal_control)
-    print(n)
-    return render_template("result.html",n=n)
+
+    # 母集団をまずは降順に並び替える（ここで並び替えるのは、サンプル出力の安定のため安定のため）
+    sample_data = sample_data.sort_values(amount, ascending=False)
+
+    # 母集団をシャッフル
+    shuffle_data = sample_data.sample(frac=1, random_state=random_state) #random_stateを使って乱数を固定化する
+
+     # サンプリング区間の算定
+    m = N/n
+    print(m)
+
+
+    # 列の追加
+    shuffle_data['cumsum'] = shuffle_data[amount].cumsum() # 積み上げ合計
+    shuffle_data['group'] = shuffle_data['cumsum']//m # サンプルのグループ化
+
+    result_data = shuffle_data.loc[shuffle_data.groupby('group')['cumsum'].idxmin(), ]
+
+    #保存先ディレクトリ指定
+    file_name = "result/result.xlsx"
+    # result_data.to_excel(file_name, encoding="shift_jis", index=False)
+    
+    writer = pd.ExcelWriter(file_name)
+
+    # 全レコードを'全体'シートに出力
+    sample_data.to_excel(writer, sheet_name = '母集団', index=False)
+    # サンプリング結果を、サンプリングシートに記載
+    result_data.to_excel(writer, sheet_name = 'サンプリング結果', index=False)
+    # サンプリングの情報追記
+    #sampling_param.to_excel(writer, sheet_name = 'サンプリングパラメータ', index=False, header=None)
+    # Excelファイルを保存
+    writer.save()
+    # Excelファイルを閉じる
+    writer.close()
+
+    return render_template("result.html", n=n)
