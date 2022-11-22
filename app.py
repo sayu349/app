@@ -25,6 +25,7 @@ app = Flask(__name__)
 
 #------------------------------------------------------
 
+# 必要なし？
 # excelとcsvを見分けて、ファイルを読み込む
 def read_excel(file,filename):
     # csvの場合
@@ -36,7 +37,7 @@ def read_excel(file,filename):
     return df.columns
 
 #------------------------------------------------------
-
+# 必要なし？
 # カラムが全行含まれているかチェックする
 def check_columns(file,filename):
     # csvの場合（最後の文字がvのファイル）
@@ -87,26 +88,27 @@ def index():
 # detail-opiton.html
 @app.route("/detail-option", methods=["POST"])
 def column_search():
-    # excelデータ読み込み
     file = request.files['upload-file']
-    print(type(file))
-    file.save("uploads/upload_file.xlsx")
     file_title = file.filename
+    print(file_title[-1])
 
-    # 「Unnamed」の個数カウント
-    check = check_columns(file,file_title)
-    
-    # 「Unnamed」の個数を数えて、0個ではないとき、カラムを再設定してもらう
-    # 異常な時の対処
-    if len(check) != 0:
-        error_text = '空白なカラムがあります。カラムを埋めて再度データを入力してください。'
-        return render_template("error.html",error_text=error_text)
-    # 正常な時の対処 => カラムの「Unnamed」が0個 => 全てのカラムの要素が設定できている
+    # csvの場合
+    if file_title[-1] == "v":
+        file.save("uploads/upload_file.csv")
+        csv = pd.read_csv("uploads/upload_file.csv")
+        csv.to_excel("uploads/upload_file.xlsx")
+        excel_data = pd.read_excel("uploads/upload_file.xlsx")
+        column = excel_data.columns
+
+    # excelの場合
     else:
-        data_list = read_excel(request.files['upload-file'],file_title)
-        return render_template("detail-option.html",
-                                data_list=data_list,
-                                file_title=file_title)
+        file.save("uploads/upload_file.xlsx")
+        excel_data = pd.read_excel("uploads/upload_file.xlsx")
+        column = excel_data.columns
+        
+    return render_template("detail-option.html",
+                            data_list=column,
+                            file_title=file_title)
 
 #------------------------------------------------------
 
