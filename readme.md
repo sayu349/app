@@ -1,8 +1,8 @@
 ## このアプリの流れ
-- import.html("http://127.0.0.1:5000/")で、データを入力する。
+- import.html("/")で、データを入力する。
     - カラムが全列入力されていなければ、エラーが出るようにする。
-- detail-option.html("http://127.0.0.1:5000/detail-option")でカラム列や計算方法を指定する。
-- result.html("http://127.0.0.1:5000/result")で完成したデータをダウンロードする
+- detail-option.html("/detail-option")でカラム列や計算方法を指定する。
+- result.html("/result")で完成したデータをダウンロードする
 
 ## 利用方法
 ### flask起動方法(windows)
