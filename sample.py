@@ -75,14 +75,16 @@ def sample_poisson(N, pm, ke, alpha, audit_risk, internal_control='依拠しな�
 
 # エクセル読み込みページ
 # http://127.0.0.1:5000/
+# import.html
 @app.route("/")
 def index():
-    return render_template("import-menu.html")
+    return render_template("import.html")
 
 #------------------------------------------------------
 
 # 変動パラメータ設定ページ
 # http://127.0.0.1:5000/detail-option
+# detail-opiton.html
 @app.route("/detail-option", methods=["POST"])
 def column_search():
     # excelデータ読み込み
@@ -110,6 +112,7 @@ def column_search():
 
 # 結果ダウンロードページ
 # http://127.0.0.1:5000/result
+# result.html
 @app.route("/result", methods=["POST"])
 def calc_result():
     #------------------------------------------------------
@@ -169,15 +172,16 @@ def calc_result():
     file_name = "result/result.xlsx"
     # シート呼び出し
     writer = pd.ExcelWriter(file_name)
-    # 全レコードを'全体'シートに出力
+    # エクセルファイルに計算したデータを追加していく
+    ## 全レコードを'全体'シートに出力
     sample_data.to_excel(writer, sheet_name = '母集団', index=False)
-    # サンプリング結果を、サンプリングシートに記載
+    ## サンプリング結果を、サンプリングシートに記載
     result_data.to_excel(writer, sheet_name = 'サンプリング結果', index=False)
-    # サンプリングの情報追記
+    ## サンプリングの情報追記
     sampling_param.to_excel(writer, sheet_name = 'サンプリングパラメータ', index=False, header=None)
-    # Excelファイルを保存
+    ## Excelファイルを保存
     writer.save()
-    # Excelファイルを閉じる
+    ## Excelファイルを閉じる
     writer.close()
 
     #------------------------------------------------------
@@ -186,7 +190,9 @@ def calc_result():
 
 #------------------------------------------------------
 
-#ファイルを保存する
+# ファイルを保存する
+# http://127.0.0.1:5000/result で出力する
+# result.html
 @app.route("/resultsave")
 def export_action():
     return send_file('result/result.xlsx')
