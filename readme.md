@@ -1,8 +1,11 @@
 ## このアプリの流れ
 - import.html("/")で、データを入力する。
     - カラムが全列入力されていなければ、エラーが出るようにする。
+    - インポートデータは、uploads/upload_file.xlsxとして格納する。
 - detail-option.html("/detail-option")でカラム列や計算方法を指定する。
-- result.html("/result")で完成したデータをダウンロードする
+    - 計算結果はresult/result.xlsxとして格納する。
+- result.html("/result")で完成したデータをダウンロードする。
+    - result/result.xlsxにアクセスして、ダウンロードする。
 
 ## 利用方法
 ### flask起動方法(windows)
