@@ -2,6 +2,7 @@
 from flask import Flask
 from flask import render_template
 from flask import request
+from flask import send_file
 
 
 # 統計等のライブラリ
@@ -22,10 +23,32 @@ import seaborn as sns
 # おまじない
 app = Flask(__name__)
 
-# 金額列調整方法
-def read_excel(filename):
-    df = pd.read_excel(filename)
+#------------------------------------------------------
+
+# excelとcsvを見分けて、ファイルを読み込む
+def read_excel(file,filename):
+    # csvの場合
+    if filename[-1] == 'v':
+        df = pd.read_csv(file)
+    # excelの場合
+    elif filename[-1] == 'x':
+        df = pd.read_excel(file)
     return df.columns
+
+#------------------------------------------------------
+
+# カラムが全行含まれているかチェックする
+def check_columns(file,filename):
+    # csvの場合（最後の文字がvのファイル）
+    if filename[-1] == 'v':
+        df = pd.read_csv(file)
+    # excelの場合（最後の文字がxのファイル）
+    elif filename[-1] == 'x':
+        df = pd.read_excel(file)
+    # カラム（1行目）の要素が空であることを意味する「Unnamed」の個数を数える
+    return df.T.query("index.str.contains('Unnamed')",engine="python")
+
+#------------------------------------------------------
 
 # ポアソン分布による金額単位サンプリングによるサンプル数算定の関数
 def sample_poisson(N, pm, ke, alpha, audit_risk, internal_control='依拠しない'):
@@ -48,34 +71,58 @@ def sample_poisson(N, pm, ke, alpha, audit_risk, internal_control='依拠しな�
         n = math.ceil(n/3)
     return n
 
+#------------------------------------------------------
+
 # エクセル読み込みページ
+# http://127.0.0.1:5000/
 @app.route("/")
 def index():
     return render_template("import-menu.html")
 
+#------------------------------------------------------
+
 # 変動パラメータ設定ページ
-@app.route("/sampleform-post", methods=["POST"])
+# http://127.0.0.1:5000/detail-option
+@app.route("/detail-option", methods=["POST"])
 def column_search():
+    # excelデータ読み込み
     file = request.files['upload-file']
-    # データを保持したい場合は以下のコードを回す(オンライン上へデプロイする際には要検討)
+    print(type(file))
     file.save("uploads/upload_file.xlsx")
     file_title = file.filename
-    data_list = read_excel(request.files['upload-file'])
-    return render_template("column_search_result.html",
-                           data_list=data_list,
-                           file_title=file_title)
+
+    # 「Unnamed」の個数カウント
+    check = check_columns(file,file_title)
+    
+    # 「Unnamed」の個数を数えて、0個ではないとき、カラムを再設定してもらう
+    # 異常な時の対処
+    if len(check) != 0:
+        error_text = '空白なカラムがあります。カラムを埋めて再度データを入力してください。'
+        return render_template("error.html",error_text=error_text)
+    # 正常な時の対処 => カラムの「Unnamed」が0個 => 全てのカラムの要素が設定できている
+    else:
+        data_list = read_excel(request.files['upload-file'],file_title)
+        return render_template("detail-option.html",
+                                data_list=data_list,
+                                file_title=file_title)
+
+#------------------------------------------------------
 
 # 結果ダウンロードページ
+# http://127.0.0.1:5000/result
 @app.route("/result", methods=["POST"])
 def calc_result():
-    print(request.form)
+    #------------------------------------------------------
+    
     # 金額列定義
-    amount = request.form['sample']
-
-    # シート内で列名を指定して、金額合計を算出
-    df = pd.read_excel("uploads/upload_file.xlsx")
     sample_data = pd.read_excel("uploads/upload_file.xlsx")
-    total_amount = df[request.form['sample']].sum()
+    # request.form['sample'] = "金額列"
+    amount = request.form['sample']
+    # 母集団の金額が正しいかチェック
+    total_amount = sample_data[request.form['sample']].sum()
+
+    #------------------------------------------------------
+    
     # 変動パラメータの設定
     # 母集団の金額合計
     N = total_amount
@@ -92,17 +139,23 @@ def calc_result():
     alpha = 0.05
     # サンプルサイズnの算定
     n = sample_poisson(N, pm, ke, alpha, audit_risk, internal_control)
+    # サンプリングシートに記載用の、パラメータ一覧
+    sampling_param = pd.DataFrame([['母集団合計', N],
+                                ['手続実施上の重要性', pm],
+                                ['リスク', audit_risk],
+                                ['内部統制', internal_control],
+                                ['random_state', random_state]])
 
+    #------------------------------------------------------
+    
     # 母集団をまずは降順に並び替える（ここで並び替えるのは、サンプル出力の安定のため安定のため）
     sample_data = sample_data.sort_values(amount, ascending=False)
-
     # 母集団をシャッフル
     shuffle_data = sample_data.sample(frac=1, random_state=random_state) #random_stateを使って乱数を固定化する
-
      # サンプリング区間の算定
     m = N/n
-    print(m)
 
+    #------------------------------------------------------
 
     # 列の追加
     shuffle_data['cumsum'] = shuffle_data[amount].cumsum() # 積み上げ合計
@@ -110,21 +163,30 @@ def calc_result():
 
     result_data = shuffle_data.loc[shuffle_data.groupby('group')['cumsum'].idxmin(), ]
 
-    #保存先ディレクトリ指定
-    file_name = "result/result.xlsx"
-    # result_data.to_excel(file_name, encoding="shift_jis", index=False)
-    
-    writer = pd.ExcelWriter(file_name)
+    #------------------------------------------------------
 
+    # 保存先ディレクトリ
+    file_name = "result/result.xlsx"
+    # シート呼び出し
+    writer = pd.ExcelWriter(file_name)
     # 全レコードを'全体'シートに出力
     sample_data.to_excel(writer, sheet_name = '母集団', index=False)
     # サンプリング結果を、サンプリングシートに記載
     result_data.to_excel(writer, sheet_name = 'サンプリング結果', index=False)
     # サンプリングの情報追記
-    #sampling_param.to_excel(writer, sheet_name = 'サンプリングパラメータ', index=False, header=None)
+    sampling_param.to_excel(writer, sheet_name = 'サンプリングパラメータ', index=False, header=None)
     # Excelファイルを保存
     writer.save()
     # Excelファイルを閉じる
     writer.close()
 
-    return render_template("result.html", n=n)
+    #------------------------------------------------------
+
+    return render_template("result.html")
+
+#------------------------------------------------------
+
+#ファイルを保存する
+@app.route("/resultsave")
+def export_action():
+    return send_file('result/result.xlsx')

@@ -8,8 +8,9 @@
 
 <body>
     <p>監査サンプリングの対象となるexcelデータを選択してください。</p>
-    <form action="/sampleform-post" method="post" enctype="multipart/form-data">
+    <form action="/detail-option" method="post" enctype="multipart/form-data">
         <p>ファイル貼り付け場所<span>（入力必須）</span></p>
+        <p>※一行目にヘッダー（各項目名）が来るように設定してください</p>
         <input type="file" name="upload-file" accept=".xlsx, .csv" required>
         <input type="submit" value="start">
     </form>
