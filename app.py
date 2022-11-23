@@ -84,10 +84,10 @@ def index():
 # detail-opiton.html
 @app.route("/detail-option", methods=["POST"])
 def column_search():
-    # uploadしたフォルダの保存先
-    upload_path = "uploads/upload_file.xlsx"
     # requst.files['upload-file']でHTML側で入力したシートの情報を取得
     file = request.files["upload-file"]
+    # uploadしたフォルダの保存先
+    upload_path = "uploads/upload_file.xlsx"
     # ファイル名を取得（拡張子を見分ける為）
     file_title = file.filename
 
