@@ -95,6 +95,7 @@ def column_search():
     
     # csvの場合
     if file_title[-3:] == "csv":
+        # 以降の処理が.xlsxデータなので、csvをxlsx形式に変換する
         import_csv = pd.read_csv(file)
         import_csv.to_excel(upload_excel_path)
         import_excel_df = pd.read_excel(upload_excel_path)
