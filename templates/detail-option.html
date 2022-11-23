@@ -10,9 +10,9 @@
     <form action="/result" method="POST" enctype="multipart/form-data">
     <h2>読み込んだファイルは"{{file_title}}"です。</h2>
     <p>金額の表示されている列名を選択してください</p>
-    <select name="sample" required>
-        {% for data in data_list %}
-        <option value="{{ data }}">{{ data }}</option>
+    <select name="amount_column" required>
+        {% for column in columns %}
+        <option value="{{ column }}">{{ column }}</option>
         {% endfor %}
     </select>
     <p>手続実施上の重要性<span>（入力必須）</span><br>
