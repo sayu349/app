@@ -29,14 +29,15 @@ app = Flask(__name__)
 # excelとcsvを見分けて、ファイルを読み込む
 def read_excel(file,filename):
     # csvの場合
-    if filename[-1] == 'v':
+    if filename[-3:] == 'csv':
         df = pd.read_csv(file)
     # excelの場合
-    elif filename[-1] == 'x':
+    elif filename[-4:] == 'xlsx':
         df = pd.read_excel(file)
     return df.columns
 
 #------------------------------------------------------
+
 # 必要なし？
 # カラムが全行含まれているかチェックする
 def check_columns(file,filename):
@@ -88,27 +89,43 @@ def index():
 # detail-opiton.html
 @app.route("/detail-option", methods=["POST"])
 def column_search():
+    upload_excel_path = "uploads/upload_file.xlsx"
     file = request.files['upload-file']
     file_title = file.filename
-    print(file_title[-1])
-
+    
     # csvの場合
-    if file_title[-1] == "v":
-        file.save("uploads/upload_file.csv")
-        csv = pd.read_csv("uploads/upload_file.csv")
-        csv.to_excel("uploads/upload_file.xlsx")
-        excel_data = pd.read_excel("uploads/upload_file.xlsx")
-        column = excel_data.columns
+    if file_title[-3:] == "csv":
+        import_csv = pd.read_csv(file)
+        import_csv.to_excel(upload_excel_path)
+        import_excel_df = pd.read_excel(upload_excel_path)
+        columns = import_excel_df.columns
+        return render_template("detail-option.html",
+                            data_list=columns,
+                            file_title=file_title)
+
 
     # excelの場合
-    else:
-        file.save("uploads/upload_file.xlsx")
-        excel_data = pd.read_excel("uploads/upload_file.xlsx")
-        column = excel_data.columns
-        
-    return render_template("detail-option.html",
-                            data_list=column,
+    elif file_title[-4:] == "xlsx":
+        import_excel_df = pd.read_excel(file)
+        import_excel_df.to_excel(upload_excel_path)
+        columns = import_excel_df.columns
+        return render_template("detail-option.html",
+                            data_list=columns,
                             file_title=file_title)
+
+    # excelの場合（xls）
+    elif file_title[-3:] == "xls":
+        import_excel_df = pd.read_excel(file)
+        import_excel_df.to_excel(upload_excel_path)
+        columns = import_excel_df.columns
+        return render_template("detail-option.html",
+                            data_list=columns,
+                            file_title=file_title)
+
+    # 上記のファイルではないものが入力された場合の処理
+    else:
+        error_text = "入力されたファイルには対応していません"
+        return render_template("error.html",error_text=error_text)
 
 #------------------------------------------------------
 
@@ -119,7 +136,6 @@ def column_search():
 def calc_result():
     #------------------------------------------------------
     
-    # 金額列定義
     sample_data = pd.read_excel("uploads/upload_file.xlsx")
     # request.form['sample'] = "金額列"
     amount = request.form['sample']
