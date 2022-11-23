@@ -8,7 +8,7 @@
     - result/result.xlsxにアクセスして、ダウンロードする。
 
 ## 利用方法
-### flask起動方法(cmd)
+### flask起動方法(CMD)
 - コマンドプロンプトを起動
 - cd /app.pyのある場所まで移動
 - set FLASK_APP=app.py
@@ -22,5 +22,5 @@ app.pyのディレクトリ階層に移動して、以下のコマンドを実�
 - $ export FLASK_ENV=development
 - $ flask run
 
-### コマンドプロンプト以外の起動方法は以下を参照（公式）
+### CMD、Bash以外の起動方法は以下を参照（公式）
 - https://msiz07-flask-docs-ja.readthedocs.io/ja/latest/quickstart.html#a-minimal-application
